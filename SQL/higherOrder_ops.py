@@ -1,24 +1,80 @@
-1. Filter Operation
+1. filter()
 # Filter rows where Value > 300 and Active is True
 filtered_df = df.filter((col("Value") > 300) & (col("Active") == True))
 
-2. Select Operation
+spark.sql("""
+        SELECT celsius,
+        filter(celsius, t -> t > 38) AS high
+        FROM tC
+        """).show(truncate=False)
+
+2. select()
 selected_df = df.select("Value", "Title")
 
-3. Map Equivalent using selectExpr
+3. Map  + Expr
 mapped_df = df.selectExpr("Value * 2 as ValueDoubled", "Title")
 
-4. GroupBy Operation
+4. groupBy()
 grouped_df = df.groupBy("Active").agg(count("Title").alias("TitleCount"))
 
-7. First Operation
-Concept
-The first() method returns the first row of the DataFrame.
-Code:
-# Get the first row
+5. first()
 first_row = df.first()
 print(first_row)
 
+6. transform()
+spark.sql("""
+        SELECT celsius,
+        transform(celsius, t -> ((t * 9) DIV 5) + 32) AS fahrenheit
+        FROM tC
+        """).show(truncate=False) 
+
+7. exists() 
+spark.sql("""
+        SELECT celsius,
+        exists(celsius, t -> t = 38) AS threshold
+        FROM tC
+        """).show(truncate=False) 
+
+8. reduce() 
+spark.sql("""
+        SELECT celsius,
+        reduce(
+        celsius,
+        0,
+        (acc, t) -> acc + t,
+        acc -> (acc DIV size(celsius) * 9 DIV 5) + 32
+        ) AS avgFahrenheit
+        FROM tC
+        """).show(truncate=False) 
+
+9. array_zip() 
+data = [([1, 2], [2, 3], [3, 4])]
+df = spark.createDataFrame(data, ["array1", "array2", "array3"])
+df.createOrReplaceTempView("arrays")
+spark.sql("""
+        SELECT arrays_zip(array1, array2, array3) AS zipped
+        FROM arrays
+        """).show(truncate=False)
+
+10.  array_union() 
+spark.sql("""
+        SELECT array_union(array(1, 2, 3), array(3, 4, 5)) AS union_array
+        """).show(truncate=False)
+
+11. . array_except() 
+spark.sql("""
+        SELECT array_except(array(1, 2, 3), array(1, 3, 5)) AS except_array
+        """).show(truncate=False) 
+
+12. sequence() 
+spark.sql("""
+        SELECT sequence(1, 5) AS sequence_array
+        """).show(truncate=False)
+
+13. flatten() 
+spark.sql("""
+        SELECT flatten(array(array(1, 2), array(3, 4))) AS flat_array
+        """).show(truncate=False) 
 
 +--------------+--------------------------+--------------------------+-----
 SPARK SQL
